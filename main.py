@@ -1,5 +1,4 @@
 import os
-import uvicorn
 import logging
 import dotenv
 from fastapi import FastAPI, HTTPException, status
@@ -44,8 +43,4 @@ app.include_router(router)  # Include the main router with routes
 async def root():
     return {"message": "Welcome to the Real Estate Energy Efficiency Advisory App with User Registration API and JWT"}
 
-
-if __name__ == "__main__":
-    port = int(os.getenv("PORT", 8000))
-    uvicorn.run("main:app", host="127.0.0.1", port=port)
 
