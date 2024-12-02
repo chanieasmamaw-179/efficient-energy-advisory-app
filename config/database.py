@@ -1,25 +1,24 @@
 import os
-
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 import dotenv
 from models.model import Base  # Import Base from models.py
+
 # Load environment variables
 dotenv.load_dotenv()
 
-# Database URL
-DATABASE_URL = os.getenv("DATABASE_URL")
-engine = create_engine(DATABASE_URL)
+# Retrieve database URL from environment variables
+SQLALCHEMY_DATABASE_URL = os.getenv("SQLALCHEMY_DATABASE_URL")
+if not SQLALCHEMY_DATABASE_URL:
+    raise ValueError("Database URL not set in environment variables.")
 
+# Create the SQLAlchemy engine
+engine = create_engine(SQLALCHEMY_DATABASE_URL)
 
 # Initialize the sessionmaker
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# Drop existing tables and recreate them
-#Base.metadata.drop_all(bind=engine)  # This will drop the tables
-#Base.metadata.create_all(bind=engine)  # This will recreate the tables
-
-# Dependency function for session management (optional, useful for web apps)
+# Dependency function for session management (useful for FastAPI)
 def get_db():
     db = SessionLocal()
     try:
