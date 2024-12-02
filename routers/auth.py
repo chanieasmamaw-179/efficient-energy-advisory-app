@@ -17,7 +17,7 @@ from pydantic import BaseModel, EmailStr, validator
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from passlib.context import CryptContext
-import jwt
+from jwt import encode
 
 # Local Imports
 from models.model import User  # Assuming this is your ORM model for the User entity
