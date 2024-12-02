@@ -8,9 +8,9 @@ from models.model import Base  # Import Base from models.py
 dotenv.load_dotenv()
 
 # Database URL
-SQLALCHEMY_DATABASE_URL = "sqlite:///./energy_saving_app.db"
+#SQLALCHEMY_DATABASE_URL = "sqlite:///./energy_saving_app.db"
 #engine = create_engine('postgresql://localhost/[energy_saving_app.db]')
-#SQLALCHEMY_DATABASE_URL = os.getenv("SQLALCHEMY_DATABASE_URL")
+SQLALCHEMY_DATABASE_URL = os.getenv("SQLALCHEMY_DATABASE_URL")
 # Create the SQLAlchemy engine
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
