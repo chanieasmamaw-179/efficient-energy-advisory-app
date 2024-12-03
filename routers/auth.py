@@ -82,30 +82,14 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
 @router.post("/", status_code=status.HTTP_201_CREATED)
 async def register_user(user: UserCreateRequest, db: Session = Depends(db_dependency)):
     """Register a new user."""
-    try:
-        existing_user = db.query(User).filter(
-            (User.email == user.email) | (User.phone_number == user.phone_number)).first()
-        if existing_user:
-            raise HTTPException(status_code=400, detail="Email or phone number already registered.")
-
-        hashed_password = bcrypt_context.hash(user.password)
-        new_user = User(name=user.full_name, email=user.email, phone_number=user.phone_number,
-                        hash_password=hashed_password)
-
-        db.add(new_user)
-        db.commit()
-        db.refresh(new_user)
-
-        return {"message": "User successfully registered", "id": new_user.id}
-    except SQLAlchemyError as e:
-        db.rollback()
-        logger.error(f"Database error: {e}")
-        raise HTTPException(status_code=500, detail="Database error occurred.")
-    except Exception as e:
-        logger.error(f"Unexpected error: {e}")
-        raise HTTPException(status_code=500, detail="Unexpected error occurred.")
-    finally:
-        db.close()
+    existing_user = db.query(User).filter((User.email == user.email) | (User.phone_number == user.phone_number)).first()
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Email or phone number already registered.")
+    hashed_password = bcrypt_context.hash(user.password)
+    new_user = User(name=user.full_name, email=user.email, phone_number=user.phone_number, hash_password=hashed_password)
+    db.add(new_user)
+    db.commit()
+    return {"message": "User successfully registered", "id": new_user.id}
 
 
 @router.post("/token", response_model=Token)
