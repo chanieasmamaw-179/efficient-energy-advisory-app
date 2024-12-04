@@ -3,6 +3,8 @@ from sqlalchemy.orm import Session
 from config.database import SessionLocal
 import logging
 
+
+
 logger = logging.getLogger(__name__)
 
 def db_dependency():

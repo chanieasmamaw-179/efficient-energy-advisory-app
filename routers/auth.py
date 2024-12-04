@@ -20,7 +20,7 @@ from passlib.context import CryptContext
 import jwt
 
 # Local Imports
-from models.model import User  # Assuming this is your ORM model for the User entity
+from models.user import User  # Assuming this is your ORM model for the User entity
 from config.dependencies import db_dependency  # Dependency for database session
 
 # Setting up logging

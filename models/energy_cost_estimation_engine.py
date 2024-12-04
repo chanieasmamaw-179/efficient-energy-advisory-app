@@ -1,14 +1,11 @@
 # recommendations.py
 from typing import Dict
-
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
-from models.model import Recommendation, RealEstate, WeatherBasedRecommendation
+from models.weather_recommendation import WeatherBasedRecommendation
+from models.recomendation import Recommendation
 from datetime import datetime
 from services.weather_api import WeatherService
-
-
-
 
 def get_recommendation_tips(temperature: float) -> str:
     """

@@ -1,24 +1,28 @@
 import os
 from asyncio import to_thread
 from asyncio.log import logger
-
 from fastapi import APIRouter, Depends, Query, BackgroundTasks, HTTPException
 from typing import Dict, Optional
+
+from models.real_estates import RealEstate
+from models.recomendation import Recommendation
+
+
 from sqlalchemy.orm import Session
 from starlette.responses import FileResponse
-
 from config.dependencies import db_dependency
-from models import model
-from models.recomendation_tips import get_recommendation_tips
-from models.model import User, Recommendation
-from models.real_estate import register_property
-from models.energy_cost_estimation_engine import calculate_energy_usage, calculate_energy_cost, weather_recommendations
+#from env import model
 from models.notification import create_notification
+from models.recomendation_tips import get_recommendation_tips
+from models.user import User
+from models.recomendation import Recommendation
+from models.real_estates import register_property
+from models.energy_cost_estimation_engine import calculate_energy_usage, calculate_energy_cost, weather_recommendations
 from routers.auth import get_current_user
 from services.email_sender import send_email_dynamic
 from services.weather_api import WeatherService
 from schemas.create_real_estate_request import CreateRealEstateRequest
-
+from models.real_estates import RealEstate
 router = APIRouter()
 
 # Initialize WeatherService
@@ -49,7 +53,7 @@ async def optimize_energy_usage_send_email_route(
         current_user: User = Depends(get_current_user)
 ) -> Dict:
     # Fetch user real estate
-    real_estate = db.query(model.RealEstate).filter(model.RealEstate.user_id == current_user.id).first()
+    real_estate = db.query(RealEstate).filter(RealEstate.user_id == current_user.id).first()
     if not real_estate:
         raise HTTPException(status_code=404, detail="No real estate found.")
 
@@ -77,6 +81,7 @@ async def optimize_energy_usage_send_email_route(
     user_data = {
         "name": current_user.name,
         "email": current_user.email,
+        "user_id": current_user.id,
     }
     real_estate_data = {
         "location": real_estate.location,
@@ -106,6 +111,8 @@ async def optimize_energy_usage_send_email_route(
     }
 
 # Background task function
+
+
 async def send_optimization_email(
         user_data: Dict,
         real_estate_data: Dict,
@@ -161,8 +168,12 @@ async def send_optimization_email(
     recipient = {"name": user_data['name'], "email": user_data['email']}
 
     # Create a notification for the email
-    notification = create_notification(db_session, user_data['email'], f"Email scheduled for {recipient['email']}")
-
+    notification = create_notification(
+        db_session,
+        user_email=user_data['email'],
+        message=f"Email scheduled for {recipient['email']}",
+        user_id=user_data['user_id']
+    )
     # Send email
     try:
         logger.info(f"Sending optimization email to {recipient['email']}")

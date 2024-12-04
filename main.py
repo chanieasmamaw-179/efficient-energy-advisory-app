@@ -3,9 +3,11 @@ import logging
 import dotenv
 from fastapi import FastAPI, HTTPException, status
 from starlette.staticfiles import StaticFiles
+from models.real_estates import RealEstate
+#from alembic.env import config
+from config import database
 from config.database import engine
-from models import model
-from routers.router import router
+from routers.energy_estimations import router
 from routers import auth
 
 # Load environment variables
@@ -28,8 +30,9 @@ if not MAILERSEND_API_KEY:
 app.mount("/public", StaticFiles(directory="public"), name="public")
 
 # Create config tables
+
 try:
-    model.Base.metadata.create_all(bind=engine)
+    database.Base.metadata.create_all(bind=engine)
 except Exception as e:
     logger.error(f"Error initializing database_db tables: {str(e)}")
     raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
