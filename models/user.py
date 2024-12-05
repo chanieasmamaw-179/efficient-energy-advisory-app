@@ -4,6 +4,9 @@ from .base import Base  # Import shared Base
 from enum import Enum as PyEnum
 
 class NotificationFrequency(str, PyEnum):
+    """
+     Represents the User table in the database.
+    """
     DAILY = "DAILY"
     WEEKLY = "WEEKLY"
     MONTHLY = "MONTHLY"

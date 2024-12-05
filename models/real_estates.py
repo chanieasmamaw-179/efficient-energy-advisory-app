@@ -3,11 +3,21 @@ from sqlalchemy.orm import relationship, Session
 from starlette import status
 from models import Base
 from schemas.create_real_estate_request import CreateRealEstateRequest
-
 from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.orm import relationship
 
+
 class RealEstate(Base):
+    """
+        Registers a new real estate property for the user.
+        Args:
+            create_real_estate_request (CreateRealEstateRequest): Data for the new property to register.
+        Returns:
+            RealEstate: The created real estate object with its database entry.
+        Raises:
+            HTTPException: If there is an error creating the property.
+        """
+
     __tablename__ = 'real_estates'
 
     id = Column(Integer, primary_key=True)

@@ -26,6 +26,13 @@ class Notification(Base):
     user = relationship("User", back_populates="notifications")
 
 def create_notification(db_session, user_email: str, message: str, user_id: int):
+    """
+        Creates and stores a notification in the database.
+        Args:
+            db_session (Session): Active SQLAlchemy database session.
+        Returns:
+            Notification: The created notification object, refreshed with its database state.
+        """
     notification = Notification(
         email=user_email,
         message=message,

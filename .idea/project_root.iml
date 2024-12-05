@@ -2,6 +2,9 @@
 <module type="PYTHON_MODULE" version="4">
   <component name="NewModuleRootManager">
     <content url="file://$MODULE_DIR$">
+      <excludeFolder url="file://$MODULE_DIR$/path/to/venv/bin" />
+      <excludeFolder url="file://$MODULE_DIR$/path/to/venv/include" />
+      <excludeFolder url="file://$MODULE_DIR$/path/to/venv/lib" />
       <excludeFolder url="file://$MODULE_DIR$/venv" />
     </content>
     <orderEntry type="inheritedJdk" />

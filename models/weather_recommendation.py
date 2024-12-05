@@ -4,6 +4,9 @@ from datetime import datetime
 from .base import Base  # Import shared Base
 
 class WeatherBasedRecommendation(Base):
+    """
+    Represents weather-based recommendations for a user in the database.
+    """
     __tablename__ = 'weather_based_recommendations'
 
     id = Column(Integer, primary_key=True)

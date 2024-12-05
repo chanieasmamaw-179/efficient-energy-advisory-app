@@ -4,6 +4,9 @@ from datetime import datetime
 from .base import Base  # Import shared Base
 
 class Recommendation(Base):
+    """
+     Represents the Recommendation table in the database.
+    """
     __tablename__ = 'recommendations'
 
     id = Column(Integer, primary_key=True)
