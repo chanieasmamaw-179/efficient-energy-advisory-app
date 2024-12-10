@@ -1,7 +1,14 @@
+"""
+Creates weather recommendation tips is created from the model and stored the weather tips details
+"""
+# Standard library imports
+from datetime import datetime
+# Third-party imports
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
-from datetime import datetime
+# Local imports
 from .base import Base  # Import shared Base
+
 
 class WeatherBasedRecommendation(Base):
     """

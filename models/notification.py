@@ -1,8 +1,18 @@
-from datetime import datetime
-from sqlalchemy import Integer, Column, String, DateTime, ForeignKey
-from sqlalchemy.orm import relationship
-from models import Base
+"""
+Create the notification models and send the notification messages.
+"""
 
+# Standard library imports
+from datetime import datetime  # Provides date and time functions
+
+# Third-party imports
+# SQLAlchemy data types and functions for database modeling
+from sqlalchemy import Integer, Column, String, DateTime, ForeignKey
+# SQLAlchemy ORM capabilities for defining relationships
+from sqlalchemy.orm import relationship
+
+# Local imports
+from models import Base  # Base class for SQLAlchemy models in the project
 
 
 class Notification(Base):

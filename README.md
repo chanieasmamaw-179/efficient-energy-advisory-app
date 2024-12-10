@@ -14,7 +14,7 @@ This project provides an energy efficiency advisory app aimed at helping users a
     Input validations using Pydantic models.
 
 ## Weather-Based Recommendations
-    Fetch real-time weather data for a user’s city.
+    Fetch real-time weather data for a user’s real_estate_id.
     Provide actionable recommendations based on weather conditions.
 
 ## Energy Consumption and Cost Estimation
@@ -42,7 +42,7 @@ This project provides an energy efficiency advisory app aimed at helping users a
     Registers a new property for the authenticated user.
 3. Weather Recommendations
     GET /weather-tips
-    Provides weather-based energy tips for a specific city and optional date.
+    Provides weather-based energy tips for a specific real_estate_id and optional date.
 4. Energy Consumption and Cost Estimation
     POST /estimate_energy_consumption_and_cost
     Estimates the energy consumption and cost for the user's real estate.

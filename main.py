@@ -1,15 +1,31 @@
+"""
+Main application setup and initialization for the FastAPI project.
+"""
+# Standard library imports
+# Provides functions to interact with the operating system
 import os
-import logging
-import dotenv
+import logging  # Used for configuring and managing application logging
+
+# Third-party imports
+import dotenv  # Used to load environment variables from a .env file into the application
+# FastAPI framework and related utilities for handling exceptions and HTTP status codes
 from fastapi import FastAPI, HTTPException, status
+# Enables serving static files in FastAPI
 from starlette.staticfiles import StaticFiles
-from models.real_estates import RealEstate
-from config import database
-from config.database import engine, clean_up_old_records
-from routers.energy_estimations import router
-from routers import auth
+# Allows scheduling tasks to run in the background
 from apscheduler.schedulers.background import BackgroundScheduler
 
+# Local application imports
+from config import database  # Configuration module for database setup and connections
+# Specific database functions for handling engine creation and cleanup tasks
+from config.database import engine, clean_up_old_records
+# Router module handling energy estimation routes
+from routers.energy_estimations import router
+from routers import auth  # Router module for authentication-related routes
+
+app = FastAPI()
+# Include your router with its prefix
+app.include_router(router)
 
 # Load environment variables
 dotenv.load_dotenv()
@@ -18,6 +34,7 @@ dotenv.load_dotenv()
 app = FastAPI()
 logger = logging.getLogger("main")
 logging.basicConfig(level=logging.INFO)
+
 
 scheduler = BackgroundScheduler()
 # Retrieve API keys from .env
@@ -35,7 +52,7 @@ app.mount("/public", StaticFiles(directory="public"), name="public")
 try:
     database.Base.metadata.create_all(bind=engine)
 except Exception as e:
-    logger.error(f"Error initializing database_db tables: {str(e)}")
+    logger.error("Error initializing database_db tables %s:", str(e))
     raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                         detail="Database initialization error.")
 
@@ -43,9 +60,13 @@ except Exception as e:
 app.include_router(auth.router)  # Include the auth router first for user registration and login
 app.include_router(router)  # Include the main router with routes
 
-@app.get("/")
+@app.get("/", include_in_schema=False)
 async def root():
-    return {"message": "Welcome to the Real Estate Energy Efficiency Advisory App with User Registration API and JWT"}
+    """
+    Home pages: Welcome messages
+    """
+    return {"message": "Welcome to the Real Estate Energy Efficiency "
+                       "Advisory App with User Registration API and JWT"}
 
 
 @app.on_event("startup")
@@ -64,3 +85,14 @@ def stop_cleanup_scheduler():
         Stops the scheduled cleanup task when the FastAPI app shuts down.
     """
     scheduler.shutdown()
+
+
+@app.get("/favicon.ico")
+async def favicon():
+    """
+    Logo for the app
+    """
+    return FileResponse("static/favicon.ico")
+
+
+

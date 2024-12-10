@@ -1,7 +1,19 @@
+"""
+represents recommendation tables in the database and store the recommendation messages
+"""
+
+# Standard library imports
+from datetime import datetime  # Provides date and time functions
+
+# Third-party imports
+# SQLAlchemy data types and functions
 from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey
+# SQLAlchemy ORM capabilities for defining relationships
 from sqlalchemy.orm import relationship
-from datetime import datetime
-from .base import Base  # Import shared Base
+
+# Local imports
+from .base import Base  # Import shared Base class from the local module
+
 
 class Recommendation(Base):
     """

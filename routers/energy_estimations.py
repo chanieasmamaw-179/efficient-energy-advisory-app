@@ -1,63 +1,80 @@
+# Standard library imports
 import os
 from asyncio import to_thread
 from asyncio.log import logger
-from fastapi import APIRouter, Depends, Query, BackgroundTasks, HTTPException
 from typing import Dict, Optional
 
-from models.real_estates import RealEstate
-from models.recomendation import Recommendation
-
-
+# Third-party imports
+from fastapi import APIRouter, Depends, Query, BackgroundTasks, HTTPException
 from sqlalchemy.orm import Session
 from starlette.responses import FileResponse
+
+# Local application imports
 from config.dependencies import db_dependency
-#from env import model
+from models.energy_cost_estimation_engine import (
+    calculate_energy_usage,
+    calculate_energy_cost,
+    weather_recommendations,
+)
 from models.notification import create_notification
-from models.recomendation_tips import get_recommendation_tips
+from models.real_estates import RealEstate, register_property
+from models.recommendation import Recommendation
+from models.recommendation_tips import get_recommendation_tips
 from models.user import User
-from models.recomendation import Recommendation
-from models.real_estates import register_property
-from models.energy_cost_estimation_engine import calculate_energy_usage, calculate_energy_cost, weather_recommendations
 from routers.auth import get_current_user
+from schemas.create_real_estate_request import CreateRealEstateRequest
 from services.email_sender import send_email_dynamic
 from services.weather_api import WeatherService
-from schemas.create_real_estate_request import CreateRealEstateRequest
-from models.real_estates import RealEstate
-router = APIRouter()
+from services.estimated_energy_and_cost import send_optimization_energy_email
+from fastapi import FastAPI
+
+
+
+router = APIRouter(prefix="/real-estates", tags=["real-estates[GET:POST]"])
+
 
 # Initialize WeatherService
 weather_service = WeatherService(api_key=os.getenv("WEATHER_API_KEY"))
-
-@router.post("/real-estates")
+@router.post("/")
 async def register_property_route(
-        create_real_estate_request: CreateRealEstateRequest,
-        db: Session = Depends(db_dependency),
-        current_user: User = Depends(get_current_user)
+    create_real_estate_request: CreateRealEstateRequest,
+    db: Session = Depends(db_dependency),
+    current_user: User = Depends(get_current_user)
 ):
+    """Register a new real estate property for the current user."""
     new_real_estate = await register_property(create_real_estate_request, db, current_user.id)
     return {"message": "Property created successfully", "property_id": new_real_estate.id}
 
-@router.get("/weather-tips")
+@router.get("/:real_estate_id/tips")
 async def weather_recommendations_route(
+    real_estate_id: int,
     city: str,
     date: Optional[str] = Query(None, description="Date in YYYY-MM-DD format"),
     db: Session = Depends(db_dependency),
     current_user: User = Depends(get_current_user)
 ):
+    """Provide weather-based recommendations for a specific real estate property."""
+    real_estate = db.query(RealEstate).filter(
+        RealEstate.id == real_estate_id,
+        RealEstate.user_id == current_user.id
+    ).first()
+
+    if not real_estate:
+        raise HTTPException(status_code=404, detail="Real estate not found or access denied.")
+
     return await weather_recommendations(weather_service, city, date, db, current_user.id)
 
 @router.post("/optimize_energy_usage_send_email")
 async def optimize_energy_usage_send_email_route(
-        background_tasks: BackgroundTasks,
-        db: Session = Depends(db_dependency),
-        current_user: User = Depends(get_current_user)
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(db_dependency),
+    current_user: User = Depends(get_current_user)
 ) -> Dict:
-    # Fetch user real estate
+    """Calculate energy optimization and send detailed email to the user."""
     real_estate = db.query(RealEstate).filter(RealEstate.user_id == current_user.id).first()
     if not real_estate:
         raise HTTPException(status_code=404, detail="No real estate found.")
 
-    # Calculate energy optimization
     square_area = real_estate.square_area
     insulation_quality = real_estate.insulation_quality
     year_built = real_estate.year_built
@@ -66,7 +83,6 @@ async def optimize_energy_usage_send_email_route(
     energy_usage = await calculate_energy_usage(square_area, insulation_quality, year_built)
     estimated_cost = await calculate_energy_cost(energy_usage, energy_source)
 
-    # Save recommendation to the config
     recommendation = Recommendation(
         category="Energy Optimization",
         message=f"Estimated daily cost: {estimated_cost:.2f} €.",
@@ -77,7 +93,6 @@ async def optimize_energy_usage_send_email_route(
     db.add(recommendation)
     db.commit()
 
-    # Extract necessary data for background task
     user_data = {
         "name": current_user.name,
         "email": current_user.email,
@@ -90,14 +105,15 @@ async def optimize_energy_usage_send_email_route(
         "year_built": year_built,
     }
 
-    # Add email-sending task to background tasks
     background_tasks.add_task(
-        send_optimization_email,
+        send_optimization_energy_email,
         user_data=user_data,
         real_estate_data=real_estate_data,
         energy_usage=energy_usage,
         estimated_cost=estimated_cost,
-        db_session=db
+        db_session=db,
+        real_estate_id=real_estate.id,
+        weather_service=weather_service  # Ensure WeatherService is passed
     )
 
     return {
@@ -110,93 +126,4 @@ async def optimize_energy_usage_send_email_route(
         "message": "Email with energy optimization details will be sent shortly."
     }
 
-# Background task function
 
-
-async def send_optimization_email(
-        user_data: Dict,
-        real_estate_data: Dict,
-        energy_usage: float,
-        estimated_cost: float,
-        db_session: Session
-):
-    city = real_estate_data["location"] or "Unknown"
-    weather_data = weather_service.get_weather(city)
-    if not weather_data:
-        raise HTTPException(status_code=404, detail="City not found or API error.")
-
-    temp = weather_data["main"]["temp"]
-    weather_tips = get_recommendation_tips(temp).split('\n')
-
-    # Prepare email content
-    subject = "Your Personalized Energy Optimization Update"
-    formatted_weather_tips = "<ul>" + "\n".join(f"<li>{tip}</li>" for tip in weather_tips) + "</ul>"
-    html_content = f"""
-    <h1>Hello {user_data['name']},</h1>
-    <p>Your personalized energy advisory report:</p>
-    <ul>
-        <li><b>Square area:</b> {real_estate_data['square_area']} m²</li>
-        <li><b>Insulation quality:</b> {real_estate_data['insulation_quality']}</li>
-        <li><b>Year built:</b> {real_estate_data['year_built']}</li>
-        <li><b>Estimated energy usage:</b> {energy_usage:.3f} kWh</li>
-        <li><b>Estimated daily cost:</b> {estimated_cost:.3f} €</li>
-        <li><b>Temperature at location:</b> {temp} °C</li>
-    </ul>
-    <h2>Weather Tips:</h2>
-    {formatted_weather_tips}
-    <p>Thank you for using our service!</p>
-    """
-    text_content = f"""
-    Hello {user_data['name']},
-
-    Your personalized energy advisory report:
-    - Square area: {real_estate_data['square_area']} m²
-    - Insulation quality: {real_estate_data['insulation_quality']}
-    - Year built: {real_estate_data['year_built']}
-    - Estimated energy usage: {energy_usage:.3f} kWh
-    - Estimated daily cost: {estimated_cost:.3f} €
-    - Temperature at location: {temp} °C
-
-    Weather Tips:
-    {', '.join(weather_tips)}
-
-    Thank you for using our efficient energy advisory service !
-    """
-
-    # Define sender and recipient
-    sender = {"name": "Efficient Energy Advisory", "email": "MS_vDTC8L@trial-pq3enl6wpk842vwr.mlsender.net"}
-    recipient = {"name": user_data['name'], "email": user_data['email']}
-
-    # Create a notification for the email
-    notification = create_notification(
-        db_session,
-        user_email=user_data['email'],
-        message=f"Email scheduled for {recipient['email']}",
-        user_id=user_data['user_id']
-    )
-    # Send email
-    try:
-        logger.info(f"Sending optimization email to {recipient['email']}")
-        await to_thread(
-            send_email_dynamic,
-            sender=sender,
-            recipient=recipient,
-            subject=subject,
-            html_content=html_content,
-            text_content=text_content
-        )
-        notification.status = "Sent"
-        logger.info(f"Email sent to {recipient['email']}")
-    except Exception as e:
-        notification.status = "Failed"
-        logger.error(f"Error sending email to {recipient['email']}: {e}")
-    finally:
-        db_session.add(notification)
-        db_session.commit()
-
-@router.get("/favicon.ico")
-def favicon():
-    """
-    This is the design symbol of our Energy advisory app
-    """
-    return FileResponse("public/favicon.ico")

@@ -15,7 +15,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel, EmailStr, validator
 from sqlalchemy.orm import Session
-from sqlalchemy.exc import SQLAlchemyError
+#from sqlalchemy.exc import SQLAlchemyError
 from passlib.context import CryptContext
 import jwt
 
@@ -27,7 +27,7 @@ from config.dependencies import db_dependency  # Dependency for database session
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
-router = APIRouter(prefix="/auth", tags=["auth"])
+router = APIRouter(prefix="/auth", tags=["auth[POST]"])
 
 # Load environment variables
 SECRET_KEY = os.getenv("SECRET_KEY", "default_secret_key")
@@ -49,24 +49,43 @@ class UserCreateRequest(BaseModel):
 
     @validator("password")
     def validate_password(cls, password: str) -> str:
-        if len(password) < 8 or not re.search(r'\d', password) or not re.search(r'[A-Z]', password) or not re.search(r'[a-z]', password):
-            raise ValueError("Password must be at least 8 characters long and include uppercase, lowercase, and a digit.")
+        """
+        Validates the given password to ensure it meets the following criteria:
+        - At least 8 characters long
+        - Contains at least one digit
+        - Contains at least one uppercase letter
+        - Contains at least one lowercase letter
+        """
+        if len(password) < 8 or not re.search(r'\d', password) or not re.search(r'[A-Z]'
+                , password) or not re.search(r'[a-z]', password):
+            raise ValueError("Password must be at least 8 characters long and include"
+                             " uppercase, lowercase, and a digit.")
         return password
 
     @validator("confirm_password")
     def validate_confirm_password(cls, confirm_password: str, values: dict) -> str:
+        """
+         Validates that the 'confirm_password' matches the 'password' field.
+        """
         if "password" in values and confirm_password != values["password"]:
             raise ValueError("Passwords do not match.")
         return confirm_password
 
     @validator("phone_number")
     def validate_phone_number(cls, phone_number: str) -> str:
+        """
+         Validates the given phone number to ensure it matches the correct format
+        """
         if not re.match(r"^\+?\d{10,15}$", phone_number):
             raise ValueError("Invalid phone number format. Example: +1234567890")
         return phone_number
 
 
 class Token(BaseModel):
+    """
+        Token model used to represent an access token response.
+    This model is used to define the structure of the token response,
+    """
     access_token: Optional[str] = None
     token_type: str = "bearer"
 
@@ -82,25 +101,27 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
 @router.post("/", status_code=status.HTTP_201_CREATED)
 async def register_user(user: UserCreateRequest, db: Session = Depends(db_dependency)):
     """Register a new user."""
-    existing_user = db.query(User).filter((User.email == user.email) | (User.phone_number == user.phone_number)).first()
+    existing_user = db.query(User).filter((User.email == user.email) | (User.phone_number ==
+                                                                        user.phone_number)).first()
     if existing_user:
         raise HTTPException(status_code=400, detail="Email or phone number already registered.")
     hashed_password = bcrypt_context.hash(user.password)
-    new_user = User(name=user.full_name, email=user.email, phone_number=user.phone_number, hash_password=hashed_password)
+    new_user = User(name=user.full_name, email=user.email, phone_number=user.phone_number,
+                    hash_password=hashed_password)
     db.add(new_user)
     db.commit()
     return {"message": "User successfully registered", "id": new_user.id}
 
 
 @router.post("/token", response_model=Token)
-async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(db_dependency)):
+async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session =
+Depends(db_dependency)):
     """Authenticate a user and issue a JWT token."""
     user = db.query(User).filter(User.email == form_data.username).first()
     if not user or not bcrypt_context.verify(form_data.password, user.hash_password):
         raise HTTPException(status_code=401, detail="Invalid email or password.")
     access_token = create_access_token({"sub": user.email})
     return Token(access_token=access_token)
-
 
 def get_current_user(token: str = Depends(oauth2_bearer), db: Session = Depends(db_dependency)):
     """Retrieve the currently logged-in user."""
@@ -110,7 +131,7 @@ def get_current_user(token: str = Depends(oauth2_bearer), db: Session = Depends(
         if not user:
             raise HTTPException(status_code=401, detail="Invalid token.")
         return user
-    except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="Token expired.")
-    except jwt.InvalidTokenError:
-        raise HTTPException(status_code=401, detail="Invalid token.")
+    except jwt.ExpiredSignatureError as exc:
+        raise HTTPException(status_code=401, detail="Token expired.") from exc
+    except jwt.InvalidTokenError as exc:
+        raise HTTPException(status_code=401, detail="Invalid token.") from exc

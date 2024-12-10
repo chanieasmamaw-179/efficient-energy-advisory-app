@@ -51,11 +51,11 @@ def test_root_endpoint():
 def test_register_property_route(test_access_token):
     headers = {"Authorization": f"Bearer {test_access_token}"}
     payload = {
-        "location": "Test City",
+        "location": "Test real_estate_id",
         "square_area": 100,
         "insulation_quality": "Good",
         "year_built": 2000,
-        "energy_source": "electricity"
+        "energy_source": "electrireal_estate_id"
     }
     response = client.post("/real-estates", json=payload, headers=headers)
     assert response.status_code == 200
@@ -63,7 +63,7 @@ def test_register_property_route(test_access_token):
 
 def test_weather_recommendations_route(test_access_token):
     headers = {"Authorization": f"Bearer {test_access_token}"}
-    response = client.get("/weather-tips?city=TestCity", headers=headers)
+    response = client.get("/weather-tips?real_estate_id=Testreal_estate_id", headers=headers)
     assert response.status_code == 200
     assert "tips" in response.json()
 

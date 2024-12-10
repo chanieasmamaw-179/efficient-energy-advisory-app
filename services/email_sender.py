@@ -1,7 +1,14 @@
-import logging
-from mailersend import emails
+"""
+This module handles the import of necessary libraries and configurations for sending emails
+using MailerSend and loading environment variables from a .env file.
+"""
+# Standard library imports
 import os
+import logging
+
+# Third-party imports
 from dotenv import load_dotenv
+from mailersend import emails
 
 # Load environment variables
 load_dotenv()
@@ -56,11 +63,11 @@ def send_email_dynamic(
             mailer.set_reply_to(reply_to, mail_body)
 
         # Send the email
-        logger.info(f"Sending email to {recipient['email']} with subject '{subject}'")
+        logger.info("Sending email to %s with subject '%s'", recipient['email'], subject)
         response = mailer.send(mail_body)
-        logger.info(f"MailerSend response: {response}")
+        logger.info("MailerSend response %s:", {response})
         return response
 
     except Exception as e:
-        logger.error(f"Failed to send email to {recipient['email']}: {str(e)}")
-        raise RuntimeError(f"Failed to send email: {e}")
+        logger.error("Failed to send email to %s: %s", recipient['email'], str(e))
+        raise RuntimeError(f"Failed to send email: {e}") from e

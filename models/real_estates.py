@@ -1,22 +1,25 @@
-from fastapi import HTTPException
-from sqlalchemy.orm import relationship, Session
-from starlette import status
-from models import Base
-from schemas.create_real_estate_request import CreateRealEstateRequest
+"""
+create real estates and register the real estates details
+"""
+# Third-party imports
+from fastapi import HTTPException  # For handling HTTP errors in FastAPI
+# SQLAlchemy data types and functions for database modeling
 from sqlalchemy import Column, Integer, String, ForeignKey
-from sqlalchemy.orm import relationship
+# SQLAlchemy ORM capabilities for defining relationships and working with the session
+from sqlalchemy.orm import relationship, Session
+from starlette import status  # Status codes for HTTP responses
+
+# Local imports
+from models import Base  # Base class for SQLAlchemy models in the project
+# Pydantic schema for creating a real estate request
+from schemas.create_real_estate_request import CreateRealEstateRequest
+
 
 
 class RealEstate(Base):
     """
         Registers a new real estate property for the user.
-        Args:
-            create_real_estate_request (CreateRealEstateRequest): Data for the new property to register.
-        Returns:
-            RealEstate: The created real estate object with its database entry.
-        Raises:
-            HTTPException: If there is an error creating the property.
-        """
+    """
 
     __tablename__ = 'real_estates'
 
@@ -31,10 +34,12 @@ class RealEstate(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     user = relationship("User", back_populates="real_estates")
 
-    recommendations = relationship("Recommendation", back_populates="real_estate", cascade="all, delete-orphan")
+    recommendations = relationship("Recommendation", back_populates="real_estate",
+                                   cascade="all, delete-orphan")
 
 
-async def register_property(create_real_estate_request: CreateRealEstateRequest, db: Session, user_id: int):
+async def register_property(create_real_estate_request: CreateRealEstateRequest, db:
+Session, user_id: int):
     """
     Registers a new real estate property for the user.
     """
@@ -54,4 +59,7 @@ async def register_property(create_real_estate_request: CreateRealEstateRequest,
         return new_real_estate
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error creating property.")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error creating property: {str(e)}"
+        )
