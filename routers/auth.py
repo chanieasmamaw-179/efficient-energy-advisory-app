@@ -27,7 +27,7 @@ from config.dependencies import db_dependency  # Dependency for database session
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
-router = APIRouter(prefix="/auth", tags="auth")
+router = APIRouter(prefix="/auth", tags=["auth"])
 
 # Load environment variables
 SECRET_KEY = os.getenv("SECRET_KEY", "default_secret_key")

@@ -30,7 +30,7 @@ from fastapi import FastAPI
 
 
 
-router = APIRouter(prefix="/real-estates", tags="real-estates")
+router = APIRouter(prefix="/real-estates", tags=["real-estates"])
 
 
 # Initialize WeatherService
