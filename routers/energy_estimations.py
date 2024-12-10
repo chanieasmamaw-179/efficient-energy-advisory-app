@@ -48,7 +48,6 @@ async def register_property_route(
 @router.get("/:real_estate_id/tips")
 async def weather_recommendations_route(
     real_estate_id: int,
-    city: str,
     date: Optional[str] = Query(None, description="Date in YYYY-MM-DD format"),
     db: Session = Depends(db_dependency),
     current_user: User = Depends(get_current_user)
@@ -62,7 +61,7 @@ async def weather_recommendations_route(
     if not real_estate:
         raise HTTPException(status_code=404, detail="Real estate not found or access denied.")
 
-    return await weather_recommendations(weather_service, city, date, db, current_user.id)
+    return await weather_recommendations(weather_service, real_estate.location, date, db, current_user.id)
 
 @router.post("/optimize_energy_usage_send_email")
 async def optimize_energy_usage_send_email_route(
