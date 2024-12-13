@@ -63,7 +63,7 @@ async def weather_recommendations_route(
 
     return await weather_recommendations(weather_service, real_estate.location, date, db, current_user.id)
 
-@router.post("/optimize_energy_usage_send_email")
+@router.post("/optimize-energy-usage-send-email")
 async def optimize_energy_usage_send_email_route(
     background_tasks: BackgroundTasks,
     db: Session = Depends(db_dependency),

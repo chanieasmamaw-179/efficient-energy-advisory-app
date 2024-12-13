@@ -2,12 +2,13 @@
 Estimating the energy consumed and return to cost from weather
  API and provided weather tips and report.
 """
-from datetime import datetime  # Standard library import
-
-from fastapi import HTTPException  # Third-party imports
+# Standard library import
+from datetime import datetime
+# Third-party imports
+from fastapi import HTTPException
 from sqlalchemy.orm import Session
-
-from services.weather_api import WeatherService  # Local imports
+# Local imports
+from services.weather_api import WeatherService
 from models.weather_recommendation import WeatherBasedRecommendation
 #from models.recommendation import Recommendation
 def get_recommendation_tips(temperature: float) -> str:
@@ -28,17 +29,17 @@ str, year_built: int) -> float:
     """
     Calculate energy usage based on real estate factors.
     """
-    baseline_consumption = 4  # kWh per square area per month
+    baseline_consumption = 4  # kWh per square area per month in EU (2024)
     insulation_factor = ({"poor": 1.2, "average": 1.0, "good": 0.8}
                          .get(insulation_quality.lower(), 1.0))
-    age_factor = 1 + (2024 - year_built) / 100  # Aging factor
+    age_factor = 1 + (2024 - year_built) / 100  # Aging factor, the older house will consume more energy than the new
     return square_area * baseline_consumption * insulation_factor * age_factor
 
 async def calculate_energy_cost(energy_consumption: float, energy_source: str) -> float:
     """
     Calculate energy cost based on energy consumption and source.
     """
-    energy_rates = {"electrireal_estate_id": 0.28, "natural_gas": 0.09, "solar": 0.02}
+    energy_rates = {"electrireal_estate_id": 0.28, "natural_gas": 0.09, "solar": 0.02} # rating is in EU 2024
     rate = energy_rates.get(energy_source.lower(), 0.28)  # Default to electrireal_estate_id
     return energy_consumption * rate / 30  # for daily calculations
 

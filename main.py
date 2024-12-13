@@ -11,7 +11,7 @@ import dotenv  # Used to load environment variables from a .env file into the ap
 # FastAPI framework and related utilities for handling exceptions and HTTP status codes
 from fastapi import FastAPI, HTTPException, status
 # Enables serving static files in FastAPI
-from starlette.staticfiles import StaticFiles
+from starlette.responses import FileResponse
 # Allows scheduling tasks to run in the background
 from apscheduler.schedulers.background import BackgroundScheduler
 
@@ -45,7 +45,7 @@ if not MAILERSEND_API_KEY:
     raise ValueError("MailerSend API key is not set. Check your .env file.")
 
 # Static file mounting
-app.mount("/public", StaticFiles(directory="public"), name="public")
+#app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Create config tables
 

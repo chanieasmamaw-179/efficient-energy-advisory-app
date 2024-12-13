@@ -66,7 +66,7 @@ async def send_optimization_energy_email(
     Thank you for using our efficient energy advisory service!
     """
 
-    sender = {"name": "Efficient Energy Advisory", "email": "MS_vDTC8L@trial-pq3enl6wpk842vwr.mlsender.net"}
+    sender = {"name": "Efficient Energy Advisory", "email": "MS_mgkwOw@trial-jpzkmgqrroy4059v.mlsender.net"}
     recipient = {"name": user_data['name'], "email": user_data['email']}
 
     notification = create_notification(
