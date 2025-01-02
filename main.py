@@ -64,3 +64,8 @@ def stop_cleanup_scheduler():
         Stops the scheduled cleanup task when the FastAPI app shuts down.
     """
     scheduler.shutdown()
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)
